@@ -69,10 +69,10 @@ export function StudentForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="flex flex-col gap-4 rounded-xl border border-hanji-line bg-hanji p-6 shadow-sm"
     >
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-sm font-medium text-ink">
           방번호 (4자리)
         </label>
         <input
@@ -82,16 +82,16 @@ export function StudentForm() {
           }
           inputMode="numeric"
           placeholder="0000"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-lg tracking-widest focus:border-blue-500 focus:outline-none"
+          className="w-full rounded-md border border-hanji-line bg-hanji px-3 py-2 text-lg tracking-widest text-ink focus:border-seal focus:outline-none"
         />
         {roomCode.length === 4 && (
           <p
             className={`mt-1 text-xs ${
               roomStatus === "valid"
-                ? "text-emerald-600"
+                ? "text-indigo"
                 : roomStatus === "invalid"
-                ? "text-red-500"
-                : "text-slate-400"
+                ? "text-seal"
+                : "text-ink-soft"
             }`}
           >
             {roomStatus === "checking" && "확인 중..."}
@@ -102,7 +102,7 @@ export function StudentForm() {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-sm font-medium text-ink">
           개인번호 (2자리)
         </label>
         <input
@@ -112,12 +112,12 @@ export function StudentForm() {
           }
           inputMode="numeric"
           placeholder="01"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-lg tracking-widest focus:border-blue-500 focus:outline-none"
+          className="w-full rounded-md border border-hanji-line bg-hanji px-3 py-2 text-lg tracking-widest text-ink focus:border-seal focus:outline-none"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
+        <label className="mb-1 block text-sm font-medium text-ink">
           질문
         </label>
         <textarea
@@ -126,16 +126,16 @@ export function StudentForm() {
           maxLength={3000}
           rows={8}
           placeholder="궁금한 점을 적거나, 역사 인물 챗봇과 나눈 대화 전체를 그대로 붙여넣어도 됩니다."
-          className="w-full resize-none rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+          className="w-full resize-none rounded-md border border-hanji-line bg-hanji px-3 py-2 text-ink focus:border-seal focus:outline-none"
         />
       </div>
 
-      {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
+      {errorMsg && <p className="text-sm text-seal">{errorMsg}</p>}
 
       <button
         type="submit"
         disabled={!canSubmit}
-        className="rounded-md bg-blue-600 px-4 py-3 font-medium text-white transition hover:bg-blue-700 disabled:opacity-40"
+        className="rounded-md bg-seal px-4 py-3 font-medium text-hanji transition hover:bg-seal-dark disabled:opacity-40"
       >
         {submitting ? "전송 중..." : "제출하기"}
       </button>

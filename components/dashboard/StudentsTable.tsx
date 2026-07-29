@@ -53,15 +53,15 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
   );
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-        <h2 className="font-semibold text-slate-800">
+    <div className="rounded-xl border border-hanji-line bg-hanji shadow-sm">
+      <div className="flex items-center justify-between border-b border-hanji-line px-5 py-4">
+        <h2 className="font-serif-kr font-semibold text-ink">
           제출 {rows.length}건 · 질문 {totalQuestions}개
         </h2>
         <button
           onClick={() => downloadStudentsCsv(rows, roomCode)}
           disabled={rows.length === 0}
-          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-40"
+          className="rounded-md bg-gold px-4 py-2 text-sm font-medium text-hanji transition hover:brightness-95 disabled:opacity-40"
         >
           CSV 다운로드
         </button>
@@ -69,7 +69,7 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
+          <thead className="bg-ink text-hanji-soft">
             <tr>
               <th className="px-4 py-2 font-medium">번호</th>
               <th className="px-4 py-2 font-medium">질문별 분석</th>
@@ -81,13 +81,13 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-ink-soft">
                   불러오는 중...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-ink-soft">
                   아직 제출된 질문이 없습니다.
                 </td>
               </tr>
@@ -97,29 +97,29 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                 return (
                   <tr
                     key={row.id}
-                    className="border-t border-slate-100 align-top"
+                    className="border-t border-hanji-line align-top odd:bg-hanji-soft/40"
                   >
-                    <td className="px-4 py-3 font-mono">
+                    <td className="px-4 py-3 font-mono text-ink">
                       {row.student_number}
                     </td>
-                    <td className="px-4 py-3 max-w-sm">
+                    <td className="px-4 py-3 max-w-sm text-ink">
                       {analysis?.questions?.length ? (
                         <ol className="list-decimal space-y-2 pl-4">
                           {analysis.questions.map((q, i) => (
                             <li key={i}>
                               <p>{q.question}</p>
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-ink-soft">
                                 {q.questionType} · 사고력 {q.thinkingScore}점
                               </p>
                             </li>
                           ))}
                         </ol>
                       ) : (
-                        <p className="whitespace-pre-wrap text-slate-400">
+                        <p className="whitespace-pre-wrap text-ink-soft">
                           {row.question}
                         </p>
                       )}
-                      <details className="mt-2 text-xs text-slate-400">
+                      <details className="mt-2 text-xs text-ink-soft">
                         <summary className="cursor-pointer select-none">
                           원문 보기
                         </summary>
@@ -128,17 +128,17 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                         </p>
                       </details>
                     </td>
-                    <td className="px-4 py-3 max-w-xs text-slate-600">
+                    <td className="px-4 py-3 max-w-xs text-ink-soft">
                       {analysis?.teacherFeedback ?? "-"}
                     </td>
-                    <td className="px-4 py-3 max-w-xs text-slate-500">
+                    <td className="px-4 py-3 max-w-xs text-ink-soft">
                       {analysis?.followUpQuestions?.length
                         ? analysis.followUpQuestions.map((q, i) => (
                             <div key={i}>· {q}</div>
                           ))
                         : "-"}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-400">
+                    <td className="px-4 py-3 whitespace-nowrap text-ink-soft">
                       {new Date(row.created_at).toLocaleTimeString("ko-KR")}
                     </td>
                   </tr>

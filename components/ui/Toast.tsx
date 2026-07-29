@@ -13,7 +13,7 @@ export function useToast() {
   }, []);
 
   const toastNode = message ? (
-    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-slate-900 px-5 py-3 text-sm text-white shadow-lg">
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-gold/40 bg-ink px-5 py-3 text-sm text-hanji shadow-lg">
       {message}
     </div>
   ) : null;

@@ -56,34 +56,43 @@ export function RoomHeader({
   };
 
   return (
-    <div className="border-b border-slate-200 bg-white px-6 py-4">
+    <div className="border-b border-hanji-line bg-hanji px-6 py-4">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            historychat 교사 대시보드
-          </p>
-          {roomCode ? (
-            <p className="mt-1 text-2xl font-bold tracking-widest text-slate-900">
-              방번호 {roomCode}
-            </p>
-          ) : (
-            <p className="mt-1 text-lg text-slate-500">
-              아직 교실이 없습니다.
-            </p>
+        <div className="flex items-center gap-4">
+          {roomCode && (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-seal text-seal">
+              <span className="font-serif-kr text-base font-bold tracking-tight">
+                {roomCode}
+              </span>
+            </div>
           )}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-ink-soft">
+              historychat 교사 대시보드
+            </p>
+            {roomCode ? (
+              <p className="font-serif-kr mt-1 text-xl font-bold tracking-wide text-ink">
+                방번호 {roomCode}
+              </p>
+            ) : (
+              <p className="mt-1 text-lg text-ink-soft">
+                아직 교실이 없습니다.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <button
             onClick={handleCopyLink}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            className="rounded-md bg-seal px-4 py-2 text-sm font-medium text-hanji transition hover:bg-seal-dark"
           >
             학생용 링크 복사하기
           </button>
           <button
             onClick={handleCreateRoom}
             disabled={creating}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-md border border-hanji-line px-4 py-2 text-sm font-medium text-ink transition hover:bg-hanji-soft disabled:opacity-50"
           >
             {roomCode ? "새 방 코드 발급" : "내 교실 생성"}
           </button>
@@ -91,7 +100,7 @@ export function RoomHeader({
             <button
               onClick={handleReset}
               disabled={resetting}
-              className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+              className="rounded-md border border-seal/40 px-4 py-2 text-sm font-medium text-seal transition hover:bg-seal/10 disabled:opacity-50"
             >
               데이터 전체 초기화
             </button>

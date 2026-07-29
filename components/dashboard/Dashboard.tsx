@@ -33,10 +33,10 @@ export function Dashboard({
       />
       <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-slate-400">{email}로 로그인됨</p>
+          <p className="text-sm text-ink-soft">{email}로 로그인됨</p>
           <button
             onClick={handleLogout}
-            className="text-sm text-slate-400 underline hover:text-slate-600"
+            className="text-sm text-ink-soft underline decoration-hanji-line hover:text-seal"
           >
             로그아웃
           </button>
@@ -44,7 +44,7 @@ export function Dashboard({
         {roomCode ? (
           <StudentsTable roomCode={roomCode} />
         ) : (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-400">
+          <div className="rounded-xl border border-dashed border-hanji-line bg-hanji-soft/60 p-10 text-center text-ink-soft">
             상단의 &quot;내 교실 생성&quot; 버튼을 눌러 교실을 만들어주세요.
           </div>
         )}
