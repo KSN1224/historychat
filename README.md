@@ -58,8 +58,8 @@ npm run dev
 1. GitHub 저장소를 생성하고 이 프로젝트를 push 합니다.
 2. [Vercel](https://vercel.com)에서 해당 저장소를 새 프로젝트로 Import 합니다.
 3. Vercel 프로젝트 **Settings > Environment Variables**에 `.env.local`과 동일한 4개 값을 등록합니다.
-4. Supabase Authentication > URL Configuration의 Redirect URLs에 `https://historychat.vercel.app/**` 을 추가합니다.
-5. Deploy 하면 `https://historychat.vercel.app` 에서 서비스가 동작합니다.
+4. Supabase Authentication > URL Configuration의 Redirect URLs에 `https://historychatko.vercel.app/**` 을 추가합니다.
+5. Deploy 하면 `https://historychatko.vercel.app` 에서 서비스가 동작합니다.
 
 ## 3. 개인정보 보호 설계 요약
 

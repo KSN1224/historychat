@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const STUDENT_URL = "https://historychat.vercel.app/student";
+const STUDENT_URL = "https://historychatko.vercel.app/student";
 
 export function RoomHeader({
   roomCode,
