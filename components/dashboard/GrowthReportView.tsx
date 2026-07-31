@@ -144,7 +144,7 @@ export function GrowthReportView({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between print:hidden">
         <div>
           <span className="text-xs tracking-[0.3em] text-seal">歷史探究</span>
           <h1 className="font-serif-kr mt-1 text-2xl font-bold text-ink">
@@ -159,7 +159,15 @@ export function GrowthReportView({
         </Link>
       </div>
 
-      <div className="mb-6 flex items-end gap-3">
+      {/* 인쇄/PDF 저장 시에는 입력창 대신 학생 번호를 텍스트로 보여줍니다. */}
+      <div className="mb-4 hidden print:block">
+        <span className="text-xs tracking-[0.3em] text-seal">歷史探究</span>
+        <h1 className="font-serif-kr mt-1 text-2xl font-bold text-ink">
+          성장 리포트 · 개인번호 {studentNumber}
+        </h1>
+      </div>
+
+      <div className="mb-6 flex items-end gap-3 print:hidden">
         <div>
           <label className="mb-1 block text-sm font-medium text-ink">
             개인번호 (2자리)
@@ -174,17 +182,26 @@ export function GrowthReportView({
             className="w-28 rounded-md border border-hanji-line bg-hanji px-3 py-2 text-lg tracking-widest text-ink focus:border-seal focus:outline-none"
           />
         </div>
-        <div className="flex flex-wrap gap-3 pb-2 text-xs text-ink-soft">
-          {BLOOM_LEVELS.map((level) => (
-            <span key={level} className="flex items-center gap-1">
-              <span
-                className="inline-block h-3 w-3 rounded-sm"
-                style={{ backgroundColor: BLOOM_LEVEL_HEX[level] }}
-              />
-              {level}
-            </span>
-          ))}
-        </div>
+        {isValidStudentNumber && (
+          <button
+            onClick={() => window.print()}
+            className="rounded-md border border-hanji-line px-4 py-2 text-sm font-medium text-ink transition hover:bg-hanji-soft"
+          >
+            인쇄 / PDF로 저장
+          </button>
+        )}
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-3 text-xs text-ink-soft [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+        {BLOOM_LEVELS.map((level) => (
+          <span key={level} className="flex items-center gap-1">
+            <span
+              className="inline-block h-3 w-3 rounded-sm"
+              style={{ backgroundColor: BLOOM_LEVEL_HEX[level] }}
+            />
+            {level}
+          </span>
+        ))}
       </div>
 
       {!isValidStudentNumber ? (
@@ -203,7 +220,7 @@ export function GrowthReportView({
             sessionSummaries.map((s) => (
               <div
                 key={s.session_number}
-                className="rounded-xl border border-hanji-line bg-hanji p-4 shadow-sm"
+                className="break-inside-avoid rounded-xl border border-hanji-line bg-hanji p-4 shadow-sm"
               >
                 <div className="mb-2 flex items-center justify-between">
                   <p className="font-serif-kr font-semibold text-ink">
@@ -217,7 +234,7 @@ export function GrowthReportView({
                 </div>
 
                 {s.totalQuestions > 0 ? (
-                  <div className="flex h-6 w-full overflow-hidden rounded-full border border-hanji-line">
+                  <div className="flex h-6 w-full overflow-hidden rounded-full border border-hanji-line [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
                     {(BLOOM_LEVELS as readonly string[])
                       .concat(
                         Object.keys(s.levelCounts).filter(
@@ -261,7 +278,7 @@ export function GrowthReportView({
             ))
           )}
 
-          <div className="rounded-xl border border-hanji-line bg-hanji p-4 shadow-sm">
+          <div className="break-inside-avoid rounded-xl border border-hanji-line bg-hanji p-4 shadow-sm">
             <label className="mb-1 block text-sm font-medium text-ink">
               교사의 추가 멘트
             </label>
@@ -271,12 +288,15 @@ export function GrowthReportView({
               rows={4}
               disabled={!noteLoaded}
               placeholder="이 학생의 성장에 대해 남기고 싶은 메모를 적어주세요."
-              className="w-full resize-none rounded-md border border-hanji-line bg-hanji px-3 py-2 text-ink focus:border-seal focus:outline-none disabled:opacity-50"
+              className="w-full resize-none rounded-md border border-hanji-line bg-hanji px-3 py-2 text-ink focus:border-seal focus:outline-none disabled:opacity-50 print:hidden"
             />
+            <p className="hidden whitespace-pre-wrap text-ink print:block">
+              {note || "(작성된 메모 없음)"}
+            </p>
             <button
               onClick={handleSaveNote}
               disabled={noteSaving || !noteLoaded}
-              className="mt-2 rounded-md bg-seal px-4 py-2 text-sm font-medium text-hanji transition hover:bg-seal-dark disabled:opacity-50"
+              className="mt-2 rounded-md bg-seal px-4 py-2 text-sm font-medium text-hanji transition hover:bg-seal-dark disabled:opacity-50 print:hidden"
             >
               {noteSaving ? "저장 중..." : "메모 저장"}
             </button>
