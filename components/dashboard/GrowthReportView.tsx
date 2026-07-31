@@ -266,7 +266,7 @@ export function GrowthReportView({
                           >
                             {pct >= 8 && (
                               <span className="truncate px-0.5 text-[10px] font-semibold text-white [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
-                                {level}
+                                {level} {Math.round(pct)}%
                               </span>
                             )}
                           </div>
