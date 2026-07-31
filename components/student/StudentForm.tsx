@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
+import { normalizeStudentNumber } from "@/lib/roomCode";
 
 type RoomStatus = "idle" | "checking" | "valid" | "invalid";
 
@@ -71,7 +72,7 @@ export function StudentForm() {
 
   const canSubmit =
     roomStatus === "valid" &&
-    /^\d{2}$/.test(studentNumber) &&
+    normalizeStudentNumber(studentNumber) !== null &&
     (question.trim().length > 0 || worksheetImage !== null) &&
     !submitting;
 
@@ -105,7 +106,10 @@ export function StudentForm() {
     try {
       const formData = new FormData();
       formData.set("roomCode", roomCode);
-      formData.set("studentNumber", studentNumber);
+      formData.set(
+        "studentNumber",
+        normalizeStudentNumber(studentNumber) ?? studentNumber
+      );
       formData.set("question", question);
       if (worksheetImage) {
         formData.set("worksheetImage", worksheetImage, "worksheet.jpg");
@@ -167,7 +171,7 @@ export function StudentForm() {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-ink">
-          개인번호 (2자리)
+          개인번호
         </label>
         <input
           value={studentNumber}
@@ -175,7 +179,7 @@ export function StudentForm() {
             setStudentNumber(e.target.value.replace(/\D/g, "").slice(0, 2))
           }
           inputMode="numeric"
-          placeholder="01"
+          placeholder="1 또는 01"
           className="w-full rounded-md border border-hanji-line bg-hanji px-3 py-2 text-lg tracking-widest text-ink focus:border-seal focus:outline-none"
         />
       </div>

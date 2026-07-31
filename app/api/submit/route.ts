@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzeQuestions, analyzeWorksheetImage } from "@/lib/gemini";
 import { extractStudentQuestions } from "@/lib/parseQuestions";
-import { isValidRoomCode, isValidStudentNumber } from "@/lib/roomCode";
+import { isValidRoomCode, normalizeStudentNumber } from "@/lib/roomCode";
 
 // 챗봇과의 대화 전체를 붙여넣는 경우까지 고려한 넉넉한 길이 제한
 const MAX_QUESTION_LENGTH = 3000;
@@ -20,7 +20,9 @@ export async function POST(request: Request) {
   }
 
   const roomCode = String(formData.get("roomCode") ?? "");
-  const studentNumber = String(formData.get("studentNumber") ?? "");
+  const studentNumber = normalizeStudentNumber(
+    String(formData.get("studentNumber") ?? "")
+  );
   const question = String(formData.get("question") ?? "").trim();
   const worksheetImage = formData.get("worksheetImage");
   const imageFile = worksheetImage instanceof File ? worksheetImage : null;
@@ -31,9 +33,9 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (!isValidStudentNumber(studentNumber)) {
+  if (!studentNumber) {
     return NextResponse.json(
-      { error: "개인번호는 2자리 숫자로 입력해주세요." },
+      { error: "개인번호를 올바르게 입력해주세요." },
       { status: 400 }
     );
   }

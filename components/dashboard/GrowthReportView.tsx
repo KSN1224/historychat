@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import { BLOOM_LEVELS, BLOOM_LEVEL_HEX } from "@/lib/bloomLevels";
-import type { Room } from "@/lib/roomCode";
+import { normalizeStudentNumber, type Room } from "@/lib/roomCode";
 import type { ChatAnalysisResult, WorksheetAnalysisResult } from "@/lib/csv";
 
 const FALLBACK_COLOR = "#8a7a5c";
@@ -40,7 +40,8 @@ export function GrowthReportView({
   const [noteLoaded, setNoteLoaded] = useState(false);
   const { showToast, toastNode } = useToast();
 
-  const isValidStudentNumber = /^\d{2}$/.test(studentNumber);
+  const normalizedStudentNumber = normalizeStudentNumber(studentNumber);
+  const isValidStudentNumber = normalizedStudentNumber !== null;
   const roomsBySessionOrder = useMemo(
     () => [...rooms].sort((a, b) => a.session_number - b.session_number),
     [rooms]
@@ -66,12 +67,12 @@ export function GrowthReportView({
               .from("students")
               .select("id, room_id, analysis_result")
               .in("room_id", roomIds)
-              .eq("student_number", studentNumber)
+              .eq("student_number", normalizedStudentNumber)
           : Promise.resolve({ data: [] as StudentSubmission[] }),
         supabase
           .from("student_notes")
           .select("note")
-          .eq("student_number", studentNumber)
+          .eq("student_number", normalizedStudentNumber)
           .maybeSingle(),
       ]);
 
@@ -87,7 +88,7 @@ export function GrowthReportView({
     return () => {
       active = false;
     };
-  }, [studentNumber, isValidStudentNumber, rooms]);
+  }, [normalizedStudentNumber, isValidStudentNumber, rooms]);
 
   const sessionSummaries: SessionSummary[] = roomsBySessionOrder.map(
     (room) => {
@@ -124,13 +125,14 @@ export function GrowthReportView({
   );
 
   const handleSaveNote = async () => {
+    if (!normalizedStudentNumber) return;
     setNoteSaving(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.from("student_notes").upsert(
         {
           teacher_id: teacherId,
-          student_number: studentNumber,
+          student_number: normalizedStudentNumber,
           note,
           updated_at: new Date().toISOString(),
         },
@@ -163,14 +165,14 @@ export function GrowthReportView({
       <div className="mb-4 hidden print:block">
         <span className="text-xs tracking-[0.3em] text-seal">歷史探究</span>
         <h1 className="font-serif-kr mt-1 text-2xl font-bold text-ink">
-          성장 리포트 · 개인번호 {studentNumber}
+          성장 리포트 · 개인번호 {normalizedStudentNumber ?? studentNumber}
         </h1>
       </div>
 
       <div className="mb-6 flex items-end gap-3 print:hidden">
         <div>
           <label className="mb-1 block text-sm font-medium text-ink">
-            개인번호 (2자리)
+            개인번호
           </label>
           <input
             value={studentNumber}
@@ -178,7 +180,7 @@ export function GrowthReportView({
               setStudentNumber(e.target.value.replace(/\D/g, "").slice(0, 2))
             }
             inputMode="numeric"
-            placeholder="01"
+            placeholder="1 또는 01"
             className="w-28 rounded-md border border-hanji-line bg-hanji px-3 py-2 text-lg tracking-widest text-ink focus:border-seal focus:outline-none"
           />
         </div>

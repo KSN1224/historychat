@@ -10,6 +10,13 @@ export function isValidStudentNumber(num: string): boolean {
   return /^\d{2}$/.test(num);
 }
 
+// "1"~"9"는 "01"~"09"와 같은 학생으로 취급합니다.
+export function normalizeStudentNumber(num: string): string | null {
+  if (/^\d{2}$/.test(num)) return num;
+  if (/^[1-9]$/.test(num)) return `0${num}`;
+  return null;
+}
+
 export const MAX_SESSION_NUMBER = 7;
 
 export function isValidSessionNumber(n: number): boolean {
