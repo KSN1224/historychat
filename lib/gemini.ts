@@ -7,16 +7,8 @@ const SYSTEM_PROMPT =
   "절대로 질문들을 하나로 합쳐서 분석하지 말고, 각 질문을 독립적으로 하나씩 분석해. " +
   "각 질문마다 1) 블룸(Bloom)의 교육목표 분류학 인지적 영역 6단계(기억, 이해, 적용, 분석, 평가, 창조) " +
   "중 이 질문이 어디에 해당하는지 분류하고, 2) 사고력 점수(10점 만점)를 평가해. " +
-  "그 다음 이 학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지 총평을 작성해 " +
+  "마지막으로 이 학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지 총평을 작성해 " +
   "(예: 이 학생은 '기억/이해' 단계의 질문 위주이므로 '분석/평가' 단계로 나아갈 수 있도록 유도할 필요가 있음). " +
-  "마지막으로 학생이 다음 단계의 생각을 스스로 떠올릴 수 있도록 교사가 슬쩍 던져줄 짧은 힌트를 2개 만들어. " +
-  "이 힌트는 완성된 질문 문장이 아니라, 학생이 다룬 구체적인 인물/사건/소재를 언급하면서 " +
-  "무엇을 다시 생각해보면 좋을지 짚어주는 짧은 한 문장이어야 해 " +
-  "(예: '이순신 장군 말고 다른 인물이었다면 어땠을지', '두 사건의 결과를 비교해보면'). " +
-  "너무 짧게 줄여서 무엇에 대한 힌트인지 알아볼 수 없는 단어 나열은 피하고, 그렇다고 완성된 질문 문장으로 쓰지도 마. " +
-  "각 힌트마다 그 힌트가 학생을 블룸의 6단계(기억, 이해, 적용, 분석, 평가, 창조) 중 어디로 이끌기 위한 것인지 " +
-  "targetBloomLevel에 표시해. 보통 학생이 이미 한 질문보다 한 단계 정도만 높은 수준을 목표로 해. " +
-  "어려운 개념어나 추상적 표현, 큰 폭의 도약은 피해. " +
   "단, 텍스트에 학생의 실명이 포함되어 있을 경우 이를 무시하고 교육적 내용에만 집중해. " +
   "결과는 반드시 JSON 형식으로만 출력해.";
 
@@ -26,15 +18,9 @@ export type QuestionAnalysis = {
   thinkingScore: number;
 };
 
-export type GuidingHint = {
-  hint: string;
-  targetBloomLevel: string;
-};
-
 export type AnalysisResult = {
   questions: QuestionAnalysis[];
   teacherFeedback: string;
-  guidingComments: GuidingHint[];
 };
 
 const WORKSHEET_SYSTEM_PROMPT =
@@ -110,29 +96,8 @@ export async function analyzeQuestions(
               description:
                 "학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지에 대한 총평 (한두 문장)",
             },
-            guidingComments: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  hint: {
-                    type: SchemaType.STRING,
-                    description:
-                      "완성된 질문이 아닌, 학생이 다룬 구체적 소재를 담아 무엇을 다시 생각해보면 좋을지 짚어주는 짧은 한 문장",
-                  },
-                  targetBloomLevel: {
-                    type: SchemaType.STRING,
-                    description:
-                      "이 힌트가 학생을 이끌려는 목표 단계. 블룸의 인지적 영역 6단계 중 하나: 기억, 이해, 적용, 분석, 평가, 창조",
-                  },
-                },
-                required: ["hint", "targetBloomLevel"],
-              },
-              description:
-                "학생이 다음 생각을 스스로 떠올리도록 돕는 짧은 힌트 2개, 각각 목표 블룸 단계 포함",
-            },
           },
-          required: ["questions", "teacherFeedback", "guidingComments"],
+          required: ["questions", "teacherFeedback"],
         },
       },
     });
@@ -147,8 +112,7 @@ export async function analyzeQuestions(
 
     if (
       !Array.isArray(parsed.questions) ||
-      typeof parsed.teacherFeedback !== "string" ||
-      !Array.isArray(parsed.guidingComments)
+      typeof parsed.teacherFeedback !== "string"
     ) {
       return null;
     }

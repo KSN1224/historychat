@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzeQuestions, analyzeWorksheetImage } from "@/lib/gemini";
+import { computeGuidingHints } from "@/lib/guidingHints";
 import { extractStudentQuestions } from "@/lib/parseQuestions";
 import { isValidRoomCode, normalizeStudentNumber } from "@/lib/roomCode";
 
@@ -99,6 +100,12 @@ export async function POST(request: Request) {
     // 매칭되는 줄이 없으면 입력 전체를 질문 1개로 취급합니다.
     const extractedQuestions = extractStudentQuestions(question);
     analysisResult = await analyzeQuestions(extractedQuestions);
+    if (analysisResult) {
+      analysisResult = {
+        ...analysisResult,
+        guidingComments: computeGuidingHints(analysisResult.questions),
+      };
+    }
   }
 
   const { error: insertError } = await admin.from("students").insert({

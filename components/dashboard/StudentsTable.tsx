@@ -150,7 +150,7 @@ export function StudentsTable({ roomId }: { roomId: number }) {
               <th className="px-4 py-2 font-medium">질문별 분석 (블룸 단계)</th>
               <th className="px-4 py-2 font-medium">학생 질문 총평</th>
               <th className="px-4 py-2 font-medium">다음 질문 힌트</th>
-              <th className="px-4 py-2 font-medium">시각</th>
+              <th className="px-4 py-2 font-medium">날짜</th>
             </tr>
           </thead>
           <tbody>
@@ -255,7 +255,7 @@ export function StudentsTable({ roomId }: { roomId: number }) {
                           ? comments.map((c, i) => (
                               <div
                                 key={i}
-                                className="flex items-start gap-1"
+                                className="flex items-center gap-1.5"
                               >
                                 <BloomLevelBadge level={hintTargetLevel(c)} />
                                 <span>{hintText(c)}</span>
@@ -265,7 +265,7 @@ export function StudentsTable({ roomId }: { roomId: number }) {
                       })()}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-ink-soft">
-                      {new Date(row.created_at).toLocaleTimeString("ko-KR")}
+                      {new Date(row.created_at).toLocaleDateString("ko-KR")}
                     </td>
                   </tr>
                 );
