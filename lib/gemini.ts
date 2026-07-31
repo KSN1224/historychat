@@ -9,6 +9,16 @@ const SYSTEM_PROMPT =
   "중 이 질문이 어디에 해당하는지 분류하고, 2) 사고력 점수(10점 만점)를 평가해. " +
   "마지막으로 이 학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지 총평을 작성해 " +
   "(예: 이 학생은 '기억/이해' 단계의 질문 위주이므로 '분석/평가' 단계로 나아갈 수 있도록 유도할 필요가 있음). " +
+  "그리고 이 학생에게 다음으로 어떤 블룸 단계를 목표로 유도하면 좋을지 recommendedTargetLevel에 " +
+  "이해, 적용, 분석, 평가, 창조 중 하나만 골라 적어 (이미 최하위 단계인 기억은 목표가 될 수 없으니 고르지 마). " +
+  "총평에서 말한 방향과 recommendedTargetLevel이 반드시 서로 일치해야 해 " +
+  "(예: 총평에서 '분석/평가로 유도하라'고 했으면 recommendedTargetLevel도 분석 또는 평가여야 함). " +
+  "마지막으로 학생이 recommendedTargetLevel 수준으로 생각을 넓혀볼 수 있도록, 학생이 다룬 구체적인 " +
+  "인물/사건/소재를 직접 언급하면서 무엇을 다시 생각해보면 좋을지 짚어주는 짧은 힌트를 hints에 2개 만들어. " +
+  "이 힌트는 완성된 질문 문장이 아니라, 학생이 스스로 이어서 생각해볼 거리를 던져주는 정도여야 하고, " +
+  "두 힌트 모두 recommendedTargetLevel과 같은 수준을 겨냥해야 해. " +
+  "너무 짧게 줄여서 무엇에 대한 힌트인지 알아볼 수 없는 단어 나열은 피하고, 그렇다고 완성된 질문 문장으로 쓰지도 마. " +
+  "어려운 개념어나 추상적 표현은 피해. " +
   "단, 텍스트에 학생의 실명이 포함되어 있을 경우 이를 무시하고 교육적 내용에만 집중해. " +
   "결과는 반드시 JSON 형식으로만 출력해.";
 
@@ -21,6 +31,8 @@ export type QuestionAnalysis = {
 export type AnalysisResult = {
   questions: QuestionAnalysis[];
   teacherFeedback: string;
+  recommendedTargetLevel: string;
+  hints: string[];
 };
 
 const WORKSHEET_SYSTEM_PROMPT =
@@ -96,8 +108,24 @@ export async function analyzeQuestions(
               description:
                 "학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지에 대한 총평 (한두 문장)",
             },
+            recommendedTargetLevel: {
+              type: SchemaType.STRING,
+              description:
+                "다음으로 목표할 블룸 단계 하나: 이해, 적용, 분석, 평가, 창조 중 하나 (기억은 불가). teacherFeedback과 일치해야 함",
+            },
+            hints: {
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING },
+              description:
+                "recommendedTargetLevel 수준으로 생각을 넓히도록, 학생이 다룬 구체적 소재를 담아 짚어주는 짧은 힌트 2개 (완성된 질문 아님)",
+            },
           },
-          required: ["questions", "teacherFeedback"],
+          required: [
+            "questions",
+            "teacherFeedback",
+            "recommendedTargetLevel",
+            "hints",
+          ],
         },
       },
     });
@@ -112,7 +140,9 @@ export async function analyzeQuestions(
 
     if (
       !Array.isArray(parsed.questions) ||
-      typeof parsed.teacherFeedback !== "string"
+      typeof parsed.teacherFeedback !== "string" ||
+      typeof parsed.recommendedTargetLevel !== "string" ||
+      !Array.isArray(parsed.hints)
     ) {
       return null;
     }

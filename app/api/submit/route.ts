@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { analyzeQuestions, analyzeWorksheetImage } from "@/lib/gemini";
-import { computeGuidingHints } from "@/lib/guidingHints";
+import { buildGuidingHints } from "@/lib/guidingHints";
 import { extractStudentQuestions } from "@/lib/parseQuestions";
 import { isValidRoomCode, normalizeStudentNumber } from "@/lib/roomCode";
 
@@ -103,7 +103,10 @@ export async function POST(request: Request) {
     if (analysisResult) {
       analysisResult = {
         ...analysisResult,
-        guidingComments: computeGuidingHints(analysisResult.questions),
+        guidingComments: buildGuidingHints(
+          analysisResult.hints,
+          analysisResult.recommendedTargetLevel
+        ),
       };
     }
   }
