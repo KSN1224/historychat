@@ -3,30 +3,9 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { downloadStudentsCsv, type StudentRow } from "@/lib/csv";
+import { BloomLevelBadge } from "./BloomLevelBadge";
 
-// 블룸 단계별로 눈에 띄는 색을 달리 부여해 한눈에 구분되도록 합니다.
-const BLOOM_LEVEL_STYLES: Record<string, string> = {
-  기억: "bg-slate-600 text-white",
-  이해: "bg-sky-600 text-white",
-  적용: "bg-emerald-600 text-white",
-  분석: "bg-amber-600 text-white",
-  평가: "bg-purple-600 text-white",
-  창조: "bg-rose-600 text-white",
-};
-
-function BloomLevelBadge({ level }: { level?: string }) {
-  if (!level) return null;
-  const style = BLOOM_LEVEL_STYLES[level] ?? "bg-ink text-hanji";
-  return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${style}`}
-    >
-      {level}
-    </span>
-  );
-}
-
-export function StudentsTable({ roomCode }: { roomCode: string }) {
+export function StudentsTable({ roomId }: { roomId: number }) {
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +17,7 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
       const { data } = await supabase
         .from("students")
         .select("id, student_number, question, analysis_result, created_at")
-        .eq("room_code", roomCode)
+        .eq("room_id", roomId)
         .order("created_at", { ascending: false });
 
       if (active) {
@@ -50,14 +29,14 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
     load();
 
     const channel = supabase
-      .channel(`students-room-${roomCode}`)
+      .channel(`students-room-${roomId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "students",
-          filter: `room_code=eq.${roomCode}`,
+          filter: `room_id=eq.${roomId}`,
         },
         () => load()
       )
@@ -67,7 +46,7 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, [roomCode]);
+  }, [roomId]);
 
   const totalQuestions = rows.reduce((sum, row) => {
     const analysis = row.analysis_result;
@@ -82,7 +61,7 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
           제출 {rows.length}건 · 질문 {totalQuestions}개
         </h2>
         <button
-          onClick={() => downloadStudentsCsv(rows, roomCode)}
+          onClick={() => downloadStudentsCsv(rows, String(roomId))}
           disabled={rows.length === 0}
           className="rounded-md bg-gold px-4 py-2 text-sm font-medium text-hanji transition hover:brightness-95 disabled:opacity-40"
         >

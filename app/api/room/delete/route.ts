@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidSessionNumber } from "@/lib/roomCode";
 
+// 특정 차시의 방을 완전히 삭제합니다 (학생 제출 기록도 함께 삭제됨, FK cascade).
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -22,28 +24,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: room } = await supabase
+  const admin = createAdminClient();
+
+  // 소유권 확인 후 서비스 롤로 삭제 (rooms에는 delete 정책을 부여하지 않았으므로).
+  const { data: room } = await admin
     .from("rooms")
     .select("id")
+    .eq("teacher_id", user.id)
     .eq("session_number", sessionNumber)
-    .single();
+    .maybeSingle();
 
   if (!room) {
     return NextResponse.json(
-      { error: "생성된 차시가 없습니다." },
-      { status: 400 }
+      { error: "삭제할 차시를 찾을 수 없습니다." },
+      { status: 404 }
     );
   }
 
-  // RLS students_delete_owner 정책이 이 차시(room_id)의 소유자만 삭제 가능하도록 보장합니다.
-  const { error } = await supabase
-    .from("students")
+  const { error: deleteError } = await admin
+    .from("rooms")
     .delete()
-    .eq("room_id", room.id);
+    .eq("id", room.id);
 
-  if (error) {
+  if (deleteError) {
     return NextResponse.json(
-      { error: "초기화 중 오류가 발생했습니다." },
+      { error: "삭제 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

@@ -66,13 +66,13 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  const { data: teacher } = await admin
-    .from("teachers")
+  const { data: room } = await admin
+    .from("rooms")
     .select("id")
     .eq("room_code", roomCode)
     .maybeSingle();
 
-  if (!teacher) {
+  if (!room) {
     return NextResponse.json(
       { error: "존재하지 않는 방번호입니다." },
       { status: 400 }
@@ -100,6 +100,7 @@ export async function POST(request: Request) {
   }
 
   const { error: insertError } = await admin.from("students").insert({
+    room_id: room.id,
     room_code: roomCode,
     student_number: studentNumber,
     question: question || "(질문 없이 학습지 사진만 제출됨)",

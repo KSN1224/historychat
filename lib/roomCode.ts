@@ -9,3 +9,15 @@ export function isValidRoomCode(code: string): boolean {
 export function isValidStudentNumber(num: string): boolean {
   return /^\d{2}$/.test(num);
 }
+
+export const MAX_SESSION_NUMBER = 7;
+
+export function isValidSessionNumber(n: number): boolean {
+  return Number.isInteger(n) && n >= 1 && n <= MAX_SESSION_NUMBER;
+}
+
+export type Room = {
+  id: number;
+  session_number: number;
+  room_code: string;
+};

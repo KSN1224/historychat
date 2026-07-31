@@ -32,14 +32,19 @@ export default async function Home() {
 
   const { data: teacher } = await supabase
     .from("teachers")
-    .select("room_code, email")
+    .select("email")
     .eq("id", user.id)
     .single();
+
+  const { data: rooms } = await supabase
+    .from("rooms")
+    .select("id, session_number, room_code")
+    .order("session_number");
 
   return (
     <main className="flex flex-1 flex-col">
       <Dashboard
-        initialRoomCode={teacher?.room_code ?? null}
+        initialRooms={rooms ?? []}
         email={teacher?.email ?? user.email ?? ""}
       />
     </main>
