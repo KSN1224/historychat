@@ -241,7 +241,7 @@ export function GrowthReportView({
                 </div>
 
                 {s.totalQuestions > 0 ? (
-                  <div className="flex h-6 w-full overflow-hidden rounded-full border border-hanji-line [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+                  <div className="flex h-7 w-full overflow-hidden rounded-full border border-hanji-line [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
                     {(BLOOM_LEVELS as readonly string[])
                       .concat(
                         Object.keys(s.levelCounts).filter(
@@ -262,7 +262,14 @@ export function GrowthReportView({
                                 BLOOM_LEVEL_HEX[level] ?? FALLBACK_COLOR,
                             }}
                             title={`${level} ${Math.round(pct)}%`}
-                          />
+                            className="flex items-center justify-center overflow-hidden"
+                          >
+                            {pct >= 8 && (
+                              <span className="truncate px-0.5 text-[10px] font-semibold text-white [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
+                                {level}
+                              </span>
+                            )}
+                          </div>
                         );
                       })}
                   </div>
