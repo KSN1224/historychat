@@ -25,14 +25,17 @@ export type AnalysisResult = {
 };
 
 const WORKSHEET_SYSTEM_PROMPT =
-  "너는 초등학교 역사 수업 채점을 돕는 보조 교사야. 입력으로 학습지 문제(질문)와 " +
+  "너는 초등학교 역사 수업 채점을 돕는 보조 교사야. 입력으로 학습지 문제(질문, 없을 수도 있음)와 " +
   "학생이 학습지에 손으로 쓴 답변이 담긴 사진이 주어질거야. " +
   "1) 사진에서 학생이 직접 작성한 손글씨 답변 영역을 정확히 찾아라. " +
   "2) 그 답변 내용만 텍스트로 정확히 추출해라 (인쇄된 문제 텍스트나 다른 문제의 답은 포함하지 마라). " +
   "3) 사진에 답변이 전혀 쓰여있지 않으면 status를 blank로, 손글씨를 알아볼 수 없으면 status를 illegible로 설정하고 " +
   "extractedAnswer에는 각각 '미작성', '판독 불가'라고 적어라. " +
-  "4) 답변을 읽을 수 있는 경우에만 주어진 질문과 결합해 정답 여부(correctness)를 판단하고, " +
-  "초등학생 눈높이에 맞는 격려 섞인 교육적 피드백(feedback)을 한두 문장으로 작성해라. " +
+  "4) 답변을 읽을 수 있는 경우, 질문이 주어졌다면 그 질문과 결합해 정답 여부(correctness)를 판단해라. " +
+  "질문이 따로 주어지지 않았다면 사진에 인쇄된 문제가 있는지 먼저 확인해서 그것을 기준으로 판단하고, " +
+  "그마저도 없다면 정답 여부를 판단하지 말고 correctness를 '판단 불가'로 설정해라. " +
+  "이 경우에도 feedback에는 추출된 답변 내용에 대한 격려와 코멘트를 한두 문장으로 작성해라. " +
+  "답변을 읽을 수 있고 정답 여부도 판단한 경우, 초등학생 눈높이에 맞는 격려 섞인 교육적 피드백(feedback)을 한두 문장으로 작성해라. " +
   "판단이 불가능한 경우(blank/illegible) correctness는 '판단 불가'로, feedback에는 다시 작성하도록 안내하는 문구를 적어라. " +
   "결과는 반드시 JSON 형식으로만 출력해.";
 
@@ -126,7 +129,7 @@ export async function analyzeWorksheetImage(
   mimeType: string
 ): Promise<WorksheetAnalysisResult | null> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || !question || !imageBase64) return null;
+  if (!apiKey || !imageBase64) return null;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -161,8 +164,12 @@ export async function analyzeWorksheetImage(
       },
     });
 
+    const questionText = question.trim()
+      ? `학습지 문제(질문): ${question}`
+      : "학습지 문제(질문)가 따로 입력되지 않았습니다. 사진에 인쇄된 문제가 있다면 그것을 기준으로 채점하고, 없다면 정답 여부는 판단하지 마세요.";
+
     const result = await model.generateContent([
-      { text: `학습지 문제(질문): ${question}` },
+      { text: questionText },
       { inlineData: { mimeType, data: imageBase64 } },
     ]);
     const text = result.response.text();

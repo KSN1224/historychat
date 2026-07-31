@@ -72,7 +72,7 @@ export function StudentForm() {
   const canSubmit =
     roomStatus === "valid" &&
     /^\d{2}$/.test(studentNumber) &&
-    question.trim().length > 0 &&
+    (question.trim().length > 0 || worksheetImage !== null) &&
     !submitting;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,9 +180,13 @@ export function StudentForm() {
         />
       </div>
 
+      <p className="text-xs text-ink-soft">
+        아래 질문 작성 또는 학습지 사진 업로드 중 하나 이상을 입력해주세요.
+      </p>
+
       <div>
         <label className="mb-1 block text-sm font-medium text-ink">
-          질문
+          질문 (선택)
         </label>
         <textarea
           value={question}

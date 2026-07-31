@@ -37,7 +37,13 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (!question || question.length > MAX_QUESTION_LENGTH) {
+  if (!question && !imageFile) {
+    return NextResponse.json(
+      { error: "질문을 입력하거나 학습지 사진을 첨부해주세요." },
+      { status: 400 }
+    );
+  }
+  if (question.length > MAX_QUESTION_LENGTH) {
     return NextResponse.json(
       { error: `질문을 ${MAX_QUESTION_LENGTH}자 이내로 입력해주세요.` },
       { status: 400 }
@@ -96,7 +102,7 @@ export async function POST(request: Request) {
   const { error: insertError } = await admin.from("students").insert({
     room_code: roomCode,
     student_number: studentNumber,
-    question,
+    question: question || "(질문 없이 학습지 사진만 제출됨)",
     analysis_result: analysisResult,
   });
 
