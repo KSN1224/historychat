@@ -112,7 +112,7 @@ export function StudentsTable({ roomId }: { roomId: number }) {
               <th className="px-4 py-2 font-medium">번호</th>
               <th className="px-4 py-2 font-medium">질문별 분석 (블룸 단계)</th>
               <th className="px-4 py-2 font-medium">학생 질문 총평</th>
-              <th className="px-4 py-2 font-medium">교사의 피드백 추천</th>
+              <th className="px-4 py-2 font-medium">다음 질문 힌트</th>
               <th className="px-4 py-2 font-medium">시각</th>
             </tr>
           </thead>
