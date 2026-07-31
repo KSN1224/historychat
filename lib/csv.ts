@@ -4,15 +4,27 @@ export type QuestionAnalysis = {
   thinkingScore: number;
 };
 
+export type ChatAnalysisResult = {
+  // 기존에 저장된 데이터에는 type 필드가 없으므로 optional로 둡니다.
+  type?: "chat";
+  questions: QuestionAnalysis[];
+  teacherFeedback: string;
+  followUpQuestions: string[];
+};
+
+export type WorksheetAnalysisResult = {
+  type: "worksheet";
+  extractedAnswer: string;
+  status: "answered" | "blank" | "illegible";
+  correctness: string;
+  feedback: string;
+};
+
 export type StudentRow = {
   id: number;
   student_number: string;
   question: string;
-  analysis_result: {
-    questions: QuestionAnalysis[];
-    teacherFeedback: string;
-    followUpQuestions: string[];
-  } | null;
+  analysis_result: ChatAnalysisResult | WorksheetAnalysisResult | null;
   created_at: string;
 };
 
@@ -37,19 +49,22 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
 
   for (const row of rows) {
     const analysis = row.analysis_result;
-    const perQuestionSummary =
-      analysis?.questions
-        ?.map((q) => `${q.question} [${q.questionType}/${q.thinkingScore}점]`)
-        .join(" | ") ?? "";
+    const isWorksheet = analysis?.type === "worksheet";
+
+    const perQuestionSummary = isWorksheet
+      ? `${analysis.extractedAnswer} [${analysis.correctness}]`
+      : analysis?.questions
+          ?.map((q) => `${q.question} [${q.questionType}/${q.thinkingScore}점]`)
+          .join(" | ") ?? "";
 
     lines.push(
       [
         row.student_number,
         row.question,
         perQuestionSummary,
-        analysis?.teacherFeedback ?? "",
-        analysis?.followUpQuestions?.[0] ?? "",
-        analysis?.followUpQuestions?.[1] ?? "",
+        (isWorksheet ? analysis.feedback : analysis?.teacherFeedback) ?? "",
+        isWorksheet ? "" : analysis?.followUpQuestions?.[0] ?? "",
+        isWorksheet ? "" : analysis?.followUpQuestions?.[1] ?? "",
         new Date(row.created_at).toLocaleString("ko-KR"),
       ]
         .map((v) => escapeCsvField(String(v)))

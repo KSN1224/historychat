@@ -47,10 +47,11 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
     };
   }, [roomCode]);
 
-  const totalQuestions = rows.reduce(
-    (sum, row) => sum + (row.analysis_result?.questions?.length ?? 1),
-    0
-  );
+  const totalQuestions = rows.reduce((sum, row) => {
+    const analysis = row.analysis_result;
+    if (analysis?.type === "worksheet") return sum + 1;
+    return sum + (analysis?.questions?.length ?? 1);
+  }, 0);
 
   return (
     <div className="rounded-xl border border-hanji-line bg-hanji shadow-sm">
@@ -94,6 +95,7 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
             ) : (
               rows.map((row) => {
                 const analysis = row.analysis_result;
+                const isWorksheet = analysis?.type === "worksheet";
                 return (
                   <tr
                     key={row.id}
@@ -103,7 +105,16 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                       {row.student_number}
                     </td>
                     <td className="px-4 py-3 max-w-sm text-ink">
-                      {analysis?.questions?.length ? (
+                      {isWorksheet ? (
+                        <div>
+                          <span className="mb-1 inline-block rounded-full bg-indigo/10 px-2 py-0.5 text-xs font-medium text-indigo">
+                            학습지 · {analysis.correctness}
+                          </span>
+                          <p className="whitespace-pre-wrap">
+                            {analysis.extractedAnswer}
+                          </p>
+                        </div>
+                      ) : analysis?.questions?.length ? (
                         <ol className="list-decimal space-y-2 pl-4">
                           {analysis.questions.map((q, i) => (
                             <li key={i}>
@@ -129,10 +140,12 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                       </details>
                     </td>
                     <td className="px-4 py-3 max-w-xs text-ink-soft">
-                      {analysis?.teacherFeedback ?? "-"}
+                      {isWorksheet
+                        ? analysis.feedback
+                        : analysis?.teacherFeedback ?? "-"}
                     </td>
                     <td className="px-4 py-3 max-w-xs text-ink-soft">
-                      {analysis?.followUpQuestions?.length
+                      {!isWorksheet && analysis?.followUpQuestions?.length
                         ? analysis.followUpQuestions.map((q, i) => (
                             <div key={i}>· {q}</div>
                           ))

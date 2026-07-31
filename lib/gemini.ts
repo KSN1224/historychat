@@ -24,6 +24,25 @@ export type AnalysisResult = {
   followUpQuestions: string[];
 };
 
+const WORKSHEET_SYSTEM_PROMPT =
+  "너는 초등학교 역사 수업 채점을 돕는 보조 교사야. 입력으로 학습지 문제(질문)와 " +
+  "학생이 학습지에 손으로 쓴 답변이 담긴 사진이 주어질거야. " +
+  "1) 사진에서 학생이 직접 작성한 손글씨 답변 영역을 정확히 찾아라. " +
+  "2) 그 답변 내용만 텍스트로 정확히 추출해라 (인쇄된 문제 텍스트나 다른 문제의 답은 포함하지 마라). " +
+  "3) 사진에 답변이 전혀 쓰여있지 않으면 status를 blank로, 손글씨를 알아볼 수 없으면 status를 illegible로 설정하고 " +
+  "extractedAnswer에는 각각 '미작성', '판독 불가'라고 적어라. " +
+  "4) 답변을 읽을 수 있는 경우에만 주어진 질문과 결합해 정답 여부(correctness)를 판단하고, " +
+  "초등학생 눈높이에 맞는 격려 섞인 교육적 피드백(feedback)을 한두 문장으로 작성해라. " +
+  "판단이 불가능한 경우(blank/illegible) correctness는 '판단 불가'로, feedback에는 다시 작성하도록 안내하는 문구를 적어라. " +
+  "결과는 반드시 JSON 형식으로만 출력해.";
+
+export type WorksheetAnalysisResult = {
+  extractedAnswer: string;
+  status: "answered" | "blank" | "illegible";
+  correctness: string;
+  feedback: string;
+};
+
 // 분석 실패(키 누락, API 오류, JSON 파싱 실패 등) 시 null을 반환합니다.
 // 학생의 질문 저장 자체는 분석 성공 여부와 무관하게 계속 진행되어야 합니다.
 export async function analyzeQuestions(
@@ -95,6 +114,72 @@ export async function analyzeQuestions(
     return parsed as AnalysisResult;
   } catch (err) {
     console.error("Gemini 분석 실패:", err);
+    return null;
+  }
+}
+
+// 학습지 사진(손글씨 답변)을 Gemini로 분석합니다. 이미지는 저장하지 않고
+// 분석 목적으로만 사용됩니다. 실패 시(키 누락, API 오류, JSON 파싱 실패 등) null 반환.
+export async function analyzeWorksheetImage(
+  question: string,
+  imageBase64: string,
+  mimeType: string
+): Promise<WorksheetAnalysisResult | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || !question || !imageBase64) return null;
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_MODEL || "gemini-flash-latest",
+      systemInstruction: WORKSHEET_SYSTEM_PROMPT,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            extractedAnswer: {
+              type: SchemaType.STRING,
+              description:
+                "사진에서 추출한 학생의 손글씨 답변. 미작성 시 '미작성', 판독 불가 시 '판독 불가'",
+            },
+            status: {
+              type: SchemaType.STRING,
+              description: "answered, blank, illegible 중 하나",
+            },
+            correctness: {
+              type: SchemaType.STRING,
+              description: "정답/오답/부분 정답/판단 불가 중 하나",
+            },
+            feedback: {
+              type: SchemaType.STRING,
+              description: "학생에게 보여줄 한두 문장의 교육적 피드백",
+            },
+          },
+          required: ["extractedAnswer", "status", "correctness", "feedback"],
+        },
+      },
+    });
+
+    const result = await model.generateContent([
+      { text: `학습지 문제(질문): ${question}` },
+      { inlineData: { mimeType, data: imageBase64 } },
+    ]);
+    const text = result.response.text();
+    const parsed = JSON.parse(text);
+
+    if (
+      typeof parsed.extractedAnswer !== "string" ||
+      typeof parsed.status !== "string" ||
+      typeof parsed.correctness !== "string" ||
+      typeof parsed.feedback !== "string"
+    ) {
+      return null;
+    }
+
+    return parsed as WorksheetAnalysisResult;
+  } catch (err) {
+    console.error("Gemini 학습지 분석 실패:", err);
     return null;
   }
 }
