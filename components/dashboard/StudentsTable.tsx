@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { downloadStudentsCsv, type StudentRow } from "@/lib/csv";
+import {
+  downloadStudentsCsv,
+  hintText,
+  hintTargetLevel,
+  type StudentRow,
+} from "@/lib/csv";
 import { EditableAnalysis } from "./EditableAnalysis";
+import { BloomLevelBadge } from "./BloomLevelBadge";
 
 export function StudentsTable({ roomId }: { roomId: number }) {
   const [rows, setRows] = useState<StudentRow[]>([]);
@@ -18,7 +24,8 @@ export function StudentsTable({ roomId }: { roomId: number }) {
         .from("students")
         .select("id, student_number, question, analysis_result, created_at")
         .eq("room_id", roomId)
-        .order("created_at", { ascending: false });
+        .order("student_number", { ascending: true })
+        .order("created_at", { ascending: true });
 
       if (active) {
         setRows((data as StudentRow[]) ?? []);
@@ -79,6 +86,36 @@ export function StudentsTable({ roomId }: { roomId: number }) {
           thinkingScore,
           editedByTeacher: true,
         };
+        return { ...row, analysis_result: { ...analysis, questions } };
+      })
+    );
+  };
+
+  // 교사가 특정 질문(또는 학습지 제출)을 삭제했을 때 로컬 state에 즉시 반영.
+  // deletedRow가 true면(학습지이거나 마지막 남은 질문) 제출 행 자체가 사라진 것.
+  const deleteAnalysisItem = (
+    rowId: number,
+    questionIndex: number | null,
+    deletedRow: boolean
+  ) => {
+    if (deletedRow) {
+      setRows((prev) => prev.filter((row) => row.id !== rowId));
+      return;
+    }
+    setRows((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId || !row.analysis_result) return row;
+        const analysis = row.analysis_result;
+        if (
+          questionIndex === null ||
+          analysis.type === "worksheet" ||
+          !analysis.questions
+        ) {
+          return row;
+        }
+        const questions = analysis.questions.filter(
+          (_, i) => i !== questionIndex
+        );
         return { ...row, analysis_result: { ...analysis, questions } };
       })
     );
@@ -160,6 +197,9 @@ export function StudentsTable({ roomId }: { roomId: number }) {
                               onSaved={(level, score) =>
                                 updateAnalysis(row.id, null, level, score)
                               }
+                              onDeleted={(deletedRow) =>
+                                deleteAnalysisItem(row.id, null, deletedRow)
+                              }
                             />
                           </p>
                         </div>
@@ -177,6 +217,9 @@ export function StudentsTable({ roomId }: { roomId: number }) {
                                   editedByTeacher={q.editedByTeacher}
                                   onSaved={(level, score) =>
                                     updateAnalysis(row.id, i, level, score)
+                                  }
+                                  onDeleted={(deletedRow) =>
+                                    deleteAnalysisItem(row.id, i, deletedRow)
                                   }
                                 />
                               </p>
@@ -209,7 +252,15 @@ export function StudentsTable({ roomId }: { roomId: number }) {
                           analysis?.guidingComments ??
                           analysis?.followUpQuestions;
                         return comments?.length
-                          ? comments.map((c, i) => <div key={i}>· {c}</div>)
+                          ? comments.map((c, i) => (
+                              <div
+                                key={i}
+                                className="flex items-start gap-1"
+                              >
+                                <BloomLevelBadge level={hintTargetLevel(c)} />
+                                <span>{hintText(c)}</span>
+                              </div>
+                            ))
                           : "-";
                       })()}
                     </td>

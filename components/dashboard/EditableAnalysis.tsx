@@ -13,6 +13,7 @@ export function EditableAnalysis({
   thinkingScore,
   editedByTeacher,
   onSaved,
+  onDeleted,
 }: {
   studentId: number;
   // 학습지처럼 질문 배열이 아닌 단일 분석 결과인 경우 null
@@ -21,11 +22,14 @@ export function EditableAnalysis({
   thinkingScore?: number;
   editedByTeacher?: boolean;
   onSaved: (bloomLevel: string, thinkingScore: number) => void;
+  // deletedRow가 true면 학생 제출 행 전체가 삭제된 것(마지막 질문이었거나 학습지 타입)
+  onDeleted: (deletedRow: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [level, setLevel] = useState(bloomLevel ?? BLOOM_LEVELS[0]);
   const [score, setScore] = useState(thinkingScore ?? 5);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const startEditing = () => {
@@ -61,6 +65,35 @@ export function EditableAnalysis({
     }
   };
 
+  const handleDelete = async () => {
+    if (
+      !window.confirm(
+        "이 질문을 삭제합니다. 학생이 실수로 올린 경우에만 삭제해주세요. 되돌릴 수 없습니다."
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/students/${studentId}/analysis`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionIndex }),
+      });
+      if (!res.ok) {
+        setError("삭제 실패");
+        return;
+      }
+      const data = await res.json();
+      onDeleted(Boolean(data.deletedRow));
+    } catch {
+      setError("삭제 실패");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!editing) {
     return (
       <span className="inline-flex flex-wrap items-center gap-1.5">
@@ -72,10 +105,20 @@ export function EditableAnalysis({
         <button
           type="button"
           onClick={startEditing}
-          className="text-[11px] text-ink-soft underline decoration-dotted hover:text-seal"
+          disabled={deleting}
+          className="text-[11px] text-ink-soft underline decoration-dotted hover:text-seal disabled:opacity-50"
         >
           수정
         </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="text-[11px] text-seal underline decoration-dotted hover:text-seal-dark disabled:opacity-50"
+        >
+          {deleting ? "삭제 중..." : "삭제"}
+        </button>
+        {error && <span className="text-[11px] text-seal">{error}</span>}
       </span>
     );
   }

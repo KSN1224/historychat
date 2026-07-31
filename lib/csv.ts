@@ -8,15 +8,29 @@ export type QuestionAnalysis = {
   editedByTeacher?: boolean;
 };
 
+export type GuidingHint = {
+  hint: string;
+  targetBloomLevel?: string;
+};
+
 export type ChatAnalysisResult = {
   // 기존에 저장된 데이터에는 type 필드가 없으므로 optional로 둡니다.
   type?: "chat";
   questions: QuestionAnalysis[];
   teacherFeedback: string;
-  guidingComments?: string[];
+  // 힌트에 목표 블룸 단계를 붙이기 이전엔 문자열 배열이었으므로 두 형태 모두 지원합니다.
+  guidingComments?: (string | GuidingHint)[];
   // 블룸 분류학 적용 이전에 저장된 데이터 호환용
   followUpQuestions?: string[];
 };
+
+export function hintText(item: string | GuidingHint): string {
+  return typeof item === "string" ? item : item.hint;
+}
+
+export function hintTargetLevel(item: string | GuidingHint): string | undefined {
+  return typeof item === "string" ? undefined : item.targetBloomLevel;
+}
 
 export type WorksheetAnalysisResult = {
   type: "worksheet";
@@ -83,8 +97,20 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
         row.question,
         perQuestionSummary,
         (isWorksheet ? analysis.feedback : analysis?.teacherFeedback) ?? "",
-        guidingComments[0] ?? "",
-        guidingComments[1] ?? "",
+        guidingComments[0]
+          ? `${hintText(guidingComments[0])}${
+              hintTargetLevel(guidingComments[0])
+                ? ` [목표:${hintTargetLevel(guidingComments[0])}]`
+                : ""
+            }`
+          : "",
+        guidingComments[1]
+          ? `${hintText(guidingComments[1])}${
+              hintTargetLevel(guidingComments[1])
+                ? ` [목표:${hintTargetLevel(guidingComments[1])}]`
+                : ""
+            }`
+          : "",
         new Date(row.created_at).toLocaleString("ko-KR"),
       ]
         .map((v) => escapeCsvField(String(v)))

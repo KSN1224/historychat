@@ -15,3 +15,5 @@ export function createAdminClient() {
     }
   );
 }
+
+export type AdminClient = ReturnType<typeof createAdminClient>;
