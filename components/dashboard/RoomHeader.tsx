@@ -54,10 +54,8 @@ export function RoomHeader({
 
   const handleCopyLink = async () => {
     if (!selectedRoom) return;
-    await navigator.clipboard.writeText(
-      `${STUDENT_URL}\n방번호: ${selectedRoom.room_code} (${selectedSession}차시)`
-    );
-    showToast("링크와 방번호가 복사되었습니다");
+    await navigator.clipboard.writeText(STUDENT_URL);
+    showToast("링크가 복사되었습니다");
   };
 
   const handleReset = async () => {
