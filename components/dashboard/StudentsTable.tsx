@@ -73,9 +73,9 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
           <thead className="bg-ink text-hanji-soft">
             <tr>
               <th className="px-4 py-2 font-medium">번호</th>
-              <th className="px-4 py-2 font-medium">질문별 분석</th>
-              <th className="px-4 py-2 font-medium">교사 피드백</th>
-              <th className="px-4 py-2 font-medium">추천 심화 질문</th>
+              <th className="px-4 py-2 font-medium">질문별 분석 (블룸 단계)</th>
+              <th className="px-4 py-2 font-medium">교사 총평</th>
+              <th className="px-4 py-2 font-medium">사고 확장 유도 멘트</th>
               <th className="px-4 py-2 font-medium">시각</th>
             </tr>
           </thead>
@@ -120,7 +120,8 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                             <li key={i}>
                               <p>{q.question}</p>
                               <p className="text-xs text-ink-soft">
-                                {q.questionType} · 사고력 {q.thinkingScore}점
+                                {q.bloomLevel ?? q.questionType} · 사고력{" "}
+                                {q.thinkingScore}점
                               </p>
                             </li>
                           ))}
@@ -145,11 +146,15 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                         : analysis?.teacherFeedback ?? "-"}
                     </td>
                     <td className="px-4 py-3 max-w-xs text-ink-soft">
-                      {!isWorksheet && analysis?.followUpQuestions?.length
-                        ? analysis.followUpQuestions.map((q, i) => (
-                            <div key={i}>· {q}</div>
-                          ))
-                        : "-"}
+                      {(() => {
+                        if (isWorksheet) return "-";
+                        const comments =
+                          analysis?.guidingComments ??
+                          analysis?.followUpQuestions;
+                        return comments?.length
+                          ? comments.map((c, i) => <div key={i}>· {c}</div>)
+                          : "-";
+                      })()}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-ink-soft">
                       {new Date(row.created_at).toLocaleTimeString("ko-KR")}

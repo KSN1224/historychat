@@ -1,6 +1,8 @@
 export type QuestionAnalysis = {
   question: string;
-  questionType: string;
+  bloomLevel?: string;
+  // 블룸 분류학 적용 이전에 저장된 데이터 호환용
+  questionType?: string;
   thinkingScore: number;
 };
 
@@ -9,7 +11,9 @@ export type ChatAnalysisResult = {
   type?: "chat";
   questions: QuestionAnalysis[];
   teacherFeedback: string;
-  followUpQuestions: string[];
+  guidingComments?: string[];
+  // 블룸 분류학 적용 이전에 저장된 데이터 호환용
+  followUpQuestions?: string[];
 };
 
 export type WorksheetAnalysisResult = {
@@ -39,10 +43,10 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
   const header = [
     "개인번호",
     "원문",
-    "질문별 분석(유형/점수)",
-    "교사 피드백",
-    "심화질문1",
-    "심화질문2",
+    "질문별 분석(블룸 단계/점수)",
+    "교사 총평",
+    "사고 확장 유도 멘트1",
+    "사고 확장 유도 멘트2",
     "제출시각",
   ];
   const lines = [header.map(escapeCsvField).join(",")];
@@ -50,11 +54,17 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
   for (const row of rows) {
     const analysis = row.analysis_result;
     const isWorksheet = analysis?.type === "worksheet";
+    const guidingComments = isWorksheet
+      ? []
+      : analysis?.guidingComments ?? analysis?.followUpQuestions ?? [];
 
     const perQuestionSummary = isWorksheet
       ? `${analysis.extractedAnswer} [${analysis.correctness}]`
       : analysis?.questions
-          ?.map((q) => `${q.question} [${q.questionType}/${q.thinkingScore}점]`)
+          ?.map(
+            (q) =>
+              `${q.question} [${q.bloomLevel ?? q.questionType}/${q.thinkingScore}점]`
+          )
           .join(" | ") ?? "";
 
     lines.push(
@@ -63,8 +73,8 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
         row.question,
         perQuestionSummary,
         (isWorksheet ? analysis.feedback : analysis?.teacherFeedback) ?? "",
-        isWorksheet ? "" : analysis?.followUpQuestions?.[0] ?? "",
-        isWorksheet ? "" : analysis?.followUpQuestions?.[1] ?? "",
+        guidingComments[0] ?? "",
+        guidingComments[1] ?? "",
         new Date(row.created_at).toLocaleString("ko-KR"),
       ]
         .map((v) => escapeCsvField(String(v)))

@@ -5,23 +5,26 @@ const SYSTEM_PROMPT =
   "너는 역사 수업 전문가야. 입력으로 번호가 매겨진 학생의 질문 목록이 주어질거야. " +
   "이 질문들은 학생이 역사 인물 챗봇과 나눈 대화 중 학생 자신이 물어본 부분만 추출한 것이야. " +
   "절대로 질문들을 하나로 합쳐서 분석하지 말고, 각 질문을 독립적으로 하나씩 분석해. " +
-  "각 질문마다 1) 질문 유형(사실 확인형/탐구형)을 분류하고, 2) 사고력 점수(10점 만점)를 평가해. " +
-  "그 다음 이 학생의 전체 질문 경향을 보고 교사가 참고할 한두 문장의 피드백을 작성해 " +
-  "(예: 이 학생은 사실 확인형 질문 위주이므로 탐구형으로 이어질 심화 질문을 유도할 필요가 있음). " +
-  "마지막으로 교사가 이 학생에게 던져주면 좋을 심화 질문 2개를 제안해. " +
+  "각 질문마다 1) 블룸(Bloom)의 교육목표 분류학 인지적 영역 6단계(기억, 이해, 적용, 분석, 평가, 창조) " +
+  "중 이 질문이 어디에 해당하는지 분류하고, 2) 사고력 점수(10점 만점)를 평가해. " +
+  "그 다음 이 학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지 총평을 작성해 " +
+  "(예: 이 학생은 '기억/이해' 단계의 질문 위주이므로 '분석/평가' 단계로 나아갈 수 있도록 유도할 필요가 있음). " +
+  "마지막으로 이 총평을 바탕으로, 교사가 이 학생에게 실제로 건네면 좋을, " +
+  "더 높은 인지 단계로 사고를 확장시켜줄 유도 멘트를 2개 제안해 " +
+  "(단순 질문이 아니라 '~해보는 건 어떨까?', '~을 비교해볼래?'처럼 교사가 학생에게 직접 건넬 수 있는 대화체 멘트로). " +
   "단, 텍스트에 학생의 실명이 포함되어 있을 경우 이를 무시하고 교육적 내용에만 집중해. " +
   "결과는 반드시 JSON 형식으로만 출력해.";
 
 export type QuestionAnalysis = {
   question: string;
-  questionType: string;
+  bloomLevel: string;
   thinkingScore: number;
 };
 
 export type AnalysisResult = {
   questions: QuestionAnalysis[];
   teacherFeedback: string;
-  followUpQuestions: string[];
+  guidingComments: string[];
 };
 
 const WORKSHEET_SYSTEM_PROMPT =
@@ -71,29 +74,32 @@ export async function analyzeQuestions(
                 type: SchemaType.OBJECT,
                 properties: {
                   question: { type: SchemaType.STRING },
-                  questionType: {
+                  bloomLevel: {
                     type: SchemaType.STRING,
-                    description: "사실 확인형 또는 탐구형",
+                    description:
+                      "블룸의 인지적 영역 6단계 중 하나: 기억, 이해, 적용, 분석, 평가, 창조",
                   },
                   thinkingScore: {
                     type: SchemaType.INTEGER,
                     description: "1~10 사이의 사고력 점수",
                   },
                 },
-                required: ["question", "questionType", "thinkingScore"],
+                required: ["question", "bloomLevel", "thinkingScore"],
               },
             },
             teacherFeedback: {
               type: SchemaType.STRING,
-              description: "질문 경향에 대한 교사용 피드백 한두 문장",
+              description:
+                "학생의 질문들이 블룸의 6단계 중 주로 어느 수준에 머물러 있는지에 대한 총평 (한두 문장)",
             },
-            followUpQuestions: {
+            guidingComments: {
               type: SchemaType.ARRAY,
               items: { type: SchemaType.STRING },
-              description: "교사용 심화 질문 2개",
+              description:
+                "교사가 학생에게 직접 건네 더 높은 인지 단계로 사고를 유도할 대화체 멘트 2개",
             },
           },
-          required: ["questions", "teacherFeedback", "followUpQuestions"],
+          required: ["questions", "teacherFeedback", "guidingComments"],
         },
       },
     });
@@ -109,7 +115,7 @@ export async function analyzeQuestions(
     if (
       !Array.isArray(parsed.questions) ||
       typeof parsed.teacherFeedback !== "string" ||
-      !Array.isArray(parsed.followUpQuestions)
+      !Array.isArray(parsed.guidingComments)
     ) {
       return null;
     }
