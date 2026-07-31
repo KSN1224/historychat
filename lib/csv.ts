@@ -44,9 +44,9 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
     "개인번호",
     "원문",
     "질문별 분석(블룸 단계/점수)",
-    "교사 총평",
-    "사고 확장 유도 멘트1",
-    "사고 확장 유도 멘트2",
+    "학생 질문 총평",
+    "교사의 피드백 추천1",
+    "교사의 피드백 추천2",
     "제출시각",
   ];
   const lines = [header.map(escapeCsvField).join(",")];

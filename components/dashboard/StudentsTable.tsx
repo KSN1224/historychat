@@ -4,6 +4,28 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { downloadStudentsCsv, type StudentRow } from "@/lib/csv";
 
+// 블룸 단계별로 눈에 띄는 색을 달리 부여해 한눈에 구분되도록 합니다.
+const BLOOM_LEVEL_STYLES: Record<string, string> = {
+  기억: "bg-slate-600 text-white",
+  이해: "bg-sky-600 text-white",
+  적용: "bg-emerald-600 text-white",
+  분석: "bg-amber-600 text-white",
+  평가: "bg-purple-600 text-white",
+  창조: "bg-rose-600 text-white",
+};
+
+function BloomLevelBadge({ level }: { level?: string }) {
+  if (!level) return null;
+  const style = BLOOM_LEVEL_STYLES[level] ?? "bg-ink text-hanji";
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${style}`}
+    >
+      {level}
+    </span>
+  );
+}
+
 export function StudentsTable({ roomCode }: { roomCode: string }) {
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,8 +96,8 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
             <tr>
               <th className="px-4 py-2 font-medium">번호</th>
               <th className="px-4 py-2 font-medium">질문별 분석 (블룸 단계)</th>
-              <th className="px-4 py-2 font-medium">교사 총평</th>
-              <th className="px-4 py-2 font-medium">사고 확장 유도 멘트</th>
+              <th className="px-4 py-2 font-medium">학생 질문 총평</th>
+              <th className="px-4 py-2 font-medium">교사의 피드백 추천</th>
               <th className="px-4 py-2 font-medium">시각</th>
             </tr>
           </thead>
@@ -119,9 +141,11 @@ export function StudentsTable({ roomCode }: { roomCode: string }) {
                           {analysis.questions.map((q, i) => (
                             <li key={i}>
                               <p>{q.question}</p>
-                              <p className="text-xs text-ink-soft">
-                                {q.bloomLevel ?? q.questionType} · 사고력{" "}
-                                {q.thinkingScore}점
+                              <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
+                                <BloomLevelBadge
+                                  level={q.bloomLevel ?? q.questionType}
+                                />
+                                <span>사고력 {q.thinkingScore}점</span>
                               </p>
                             </li>
                           ))}
