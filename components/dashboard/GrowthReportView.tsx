@@ -103,6 +103,11 @@ export function GrowthReportView({
         if (!analysis) continue;
         if (analysis.type === "worksheet") {
           worksheetCount += 1;
+          if (analysis.bloomLevel) {
+            const level = analysis.bloomLevel;
+            levelCounts[level] = (levelCounts[level] ?? 0) + 1;
+            totalQuestions += 1;
+          }
           continue;
         }
         for (const q of analysis.questions ?? []) {

@@ -4,6 +4,8 @@ export type QuestionAnalysis = {
   // 블룸 분류학 적용 이전에 저장된 데이터 호환용
   questionType?: string;
   thinkingScore: number;
+  // 교사가 AI 판정을 직접 수정한 경우 true
+  editedByTeacher?: boolean;
 };
 
 export type ChatAnalysisResult = {
@@ -22,6 +24,11 @@ export type WorksheetAnalysisResult = {
   status: "answered" | "blank" | "illegible";
   correctness: string;
   feedback: string;
+  // 블룸 분류학 적용 이전에 저장된 데이터에는 없을 수 있어 optional로 둡니다.
+  bloomLevel?: string;
+  thinkingScore?: number;
+  // 교사가 AI 판정을 직접 수정한 경우 true
+  editedByTeacher?: boolean;
 };
 
 export type StudentRow = {
@@ -59,7 +66,10 @@ export function downloadStudentsCsv(rows: StudentRow[], roomCode: string) {
       : analysis?.guidingComments ?? analysis?.followUpQuestions ?? [];
 
     const perQuestionSummary = isWorksheet
-      ? `${analysis.extractedAnswer} [${analysis.correctness}]`
+      ? `${analysis.extractedAnswer} [${analysis.correctness}]` +
+        (analysis.bloomLevel
+          ? ` [${analysis.bloomLevel}/${analysis.thinkingScore}점]`
+          : "")
       : analysis?.questions
           ?.map(
             (q) =>

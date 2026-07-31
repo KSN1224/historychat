@@ -41,6 +41,12 @@ const WORKSHEET_SYSTEM_PROMPT =
   "이 경우에도 feedback에는 추출된 답변 내용에 대한 격려와 코멘트를 한두 문장으로 작성해라. " +
   "답변을 읽을 수 있고 정답 여부도 판단한 경우, 초등학생 눈높이에 맞는 격려 섞인 교육적 피드백(feedback)을 한두 문장으로 작성해라. " +
   "판단이 불가능한 경우(blank/illegible) correctness는 '판단 불가'로, feedback에는 다시 작성하도록 안내하는 문구를 적어라. " +
+  "5) 학습지 문제(질문이 주어졌거나 사진에 인쇄된 문제가 보이는 경우 그 문제)가 요구하는 사고 수준을 " +
+  "블룸(Bloom)의 교육목표 분류학 인지적 영역 6단계(기억, 이해, 적용, 분석, 평가, 창조) 중 하나로 분류해 " +
+  "bloomLevel에 적어라. 문제 자체를 전혀 알 수 없는 경우(질문도 없고 사진에 인쇄된 문제도 없는 경우)에는 " +
+  "학생이 작성한 답변 내용 자체의 사고 수준을 기준으로 분류해라. " +
+  "6) 학생 답변의 사고력 점수(thinkingScore, 10점 만점)를 평가해라. " +
+  "답변이 미작성(blank)이거나 판독 불가(illegible)인 경우 thinkingScore는 1점으로 설정해라. " +
   "결과는 반드시 JSON 형식으로만 출력해.";
 
 export type WorksheetAnalysisResult = {
@@ -48,6 +54,8 @@ export type WorksheetAnalysisResult = {
   status: "answered" | "blank" | "illegible";
   correctness: string;
   feedback: string;
+  bloomLevel: string;
+  thinkingScore: number;
 };
 
 // 분석 실패(키 누락, API 오류, JSON 파싱 실패 등) 시 null을 반환합니다.
@@ -165,8 +173,24 @@ export async function analyzeWorksheetImage(
               type: SchemaType.STRING,
               description: "학생에게 보여줄 한두 문장의 교육적 피드백",
             },
+            bloomLevel: {
+              type: SchemaType.STRING,
+              description:
+                "블룸의 인지적 영역 6단계 중 하나: 기억, 이해, 적용, 분석, 평가, 창조",
+            },
+            thinkingScore: {
+              type: SchemaType.INTEGER,
+              description: "1~10 사이의 사고력 점수",
+            },
           },
-          required: ["extractedAnswer", "status", "correctness", "feedback"],
+          required: [
+            "extractedAnswer",
+            "status",
+            "correctness",
+            "feedback",
+            "bloomLevel",
+            "thinkingScore",
+          ],
         },
       },
     });
@@ -186,7 +210,9 @@ export async function analyzeWorksheetImage(
       typeof parsed.extractedAnswer !== "string" ||
       typeof parsed.status !== "string" ||
       typeof parsed.correctness !== "string" ||
-      typeof parsed.feedback !== "string"
+      typeof parsed.feedback !== "string" ||
+      typeof parsed.bloomLevel !== "string" ||
+      typeof parsed.thinkingScore !== "number"
     ) {
       return null;
     }

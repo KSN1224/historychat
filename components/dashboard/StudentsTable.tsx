@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { downloadStudentsCsv, type StudentRow } from "@/lib/csv";
-import { BloomLevelBadge } from "./BloomLevelBadge";
+import { EditableAnalysis } from "./EditableAnalysis";
 
 export function StudentsTable({ roomId }: { roomId: number }) {
   const [rows, setRows] = useState<StudentRow[]>([]);
@@ -47,6 +47,42 @@ export function StudentsTable({ roomId }: { roomId: number }) {
       supabase.removeChannel(channel);
     };
   }, [roomId]);
+
+  // 교사가 특정 질문(또는 학습지)의 블룸 단계/사고력 점수를 수정 저장했을 때
+  // 서버 왕복(realtime) 없이 즉시 화면에 반영하기 위한 낙관적 업데이트.
+  const updateAnalysis = (
+    rowId: number,
+    questionIndex: number | null,
+    bloomLevel: string,
+    thinkingScore: number
+  ) => {
+    setRows((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId || !row.analysis_result) return row;
+        const analysis = row.analysis_result;
+        if (analysis.type === "worksheet") {
+          return {
+            ...row,
+            analysis_result: {
+              ...analysis,
+              bloomLevel,
+              thinkingScore,
+              editedByTeacher: true,
+            },
+          };
+        }
+        if (questionIndex === null || !analysis.questions) return row;
+        const questions = [...analysis.questions];
+        questions[questionIndex] = {
+          ...questions[questionIndex],
+          bloomLevel,
+          thinkingScore,
+          editedByTeacher: true,
+        };
+        return { ...row, analysis_result: { ...analysis, questions } };
+      })
+    );
+  };
 
   const totalQuestions = rows.reduce((sum, row) => {
     const analysis = row.analysis_result;
@@ -114,17 +150,35 @@ export function StudentsTable({ roomId }: { roomId: number }) {
                           <p className="whitespace-pre-wrap">
                             {analysis.extractedAnswer}
                           </p>
+                          <p className="mt-1 text-xs text-ink-soft">
+                            <EditableAnalysis
+                              studentId={row.id}
+                              questionIndex={null}
+                              bloomLevel={analysis.bloomLevel}
+                              thinkingScore={analysis.thinkingScore}
+                              editedByTeacher={analysis.editedByTeacher}
+                              onSaved={(level, score) =>
+                                updateAnalysis(row.id, null, level, score)
+                              }
+                            />
+                          </p>
                         </div>
                       ) : analysis?.questions?.length ? (
                         <ol className="list-decimal space-y-2 pl-4">
                           {analysis.questions.map((q, i) => (
                             <li key={i}>
                               <p>{q.question}</p>
-                              <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
-                                <BloomLevelBadge
-                                  level={q.bloomLevel ?? q.questionType}
+                              <p className="mt-1 text-xs text-ink-soft">
+                                <EditableAnalysis
+                                  studentId={row.id}
+                                  questionIndex={i}
+                                  bloomLevel={q.bloomLevel ?? q.questionType}
+                                  thinkingScore={q.thinkingScore}
+                                  editedByTeacher={q.editedByTeacher}
+                                  onSaved={(level, score) =>
+                                    updateAnalysis(row.id, i, level, score)
+                                  }
                                 />
-                                <span>사고력 {q.thinkingScore}점</span>
                               </p>
                             </li>
                           ))}
